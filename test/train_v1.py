@@ -8,7 +8,7 @@ from ddpg_ac import Agent
 from a_c_test_agent import NewAgent
 from cassiemujoco import *
 
-model = '/home/k38/Cassie_Ostrich_RL/test/cassie.xml'
+model = 'cassie.xml'
 traj_path = 'ostrichrl/ostrichrl/assets/mocap/cassie/'
 bot = CassieSim(model,terrain = False)
 
