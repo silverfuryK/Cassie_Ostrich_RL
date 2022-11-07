@@ -52,6 +52,7 @@ for i in range(tot_episodes):
                 #time.sleep(dt)
                 '''
                 act = agent.choose_action(obs)
+                print(env.step(act))
                 new_state, reward, done = env.step(act)
                 #print(new_state)
                 agent.remember(obs, act, reward, new_state, int(done))
