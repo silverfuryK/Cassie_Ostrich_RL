@@ -116,6 +116,8 @@ class CassieEnv:
         if reward < 0.3:
             done = True
 
+        print(self.get_full_state().shape)
+
         return self.get_full_state(), reward, done, {}
 
     def reset(self):

@@ -16,7 +16,7 @@ env = CassieEnv(model,traj_path,60)
 
 
 agent = Agent(alpha=0.0025, beta=0.0025, input_dims=[35], tau=0.001, env=env,
-              batch_size=64,  layer1_size=512, layer2_size=512, n_actions=10)
+              batch_size=64,  layer1_size=512, layer2_size=512, n_actions=20)
 #agent.load_models()
 #agent.check_actor_params()
 '''
