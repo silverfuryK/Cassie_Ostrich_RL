@@ -14,7 +14,7 @@ bot = CassieSim(model,terrain = False)
 class CassieEnv:
     def __init__(self, model, traj_path, simrate=60, clock_based=False):
         self.sim = CassieSim(model)
-        self.vis = None
+        self.vis = CassieVis(self.sim)
 
         # NOTE: Xie et al uses full reference trajectory info
         # (i.e. clock_based=False)
@@ -123,6 +123,8 @@ class CassieEnv:
         self.time = 0
         self.counter = 0
 
+        self.reward = 0
+
         qpos, qvel = self.get_ref_state(self.phase)
 
         self.sim.set_qpos(qpos)
@@ -219,12 +221,12 @@ class CassieEnv:
 
             spring_error += 1000 * (target - actual) ** 2      
         
-        reward = 0.5 * np.exp(-joint_error) +       \
+        self.reward = 0.5 * np.exp(-joint_error) +       \
                  0.3 * np.exp(-com_error) +         \
                  0.1 * np.exp(-orientation_error) + \
                  0.1 * np.exp(-spring_error)
 
-        return reward
+        return self.reward
 
     # get the corresponding state from the reference trajectory for the current phase
     def get_ref_state(self, phase=None):

@@ -15,8 +15,9 @@ bot = CassieSim(model,terrain = False)
 env = CassieEnv(model,traj_path,60)
 
 
-agent = Agent(alpha=0.0025, beta=0.0025, input_dims=[35], tau=0.001, env=env,
-              batch_size=64,  layer1_size=512, layer2_size=512, n_actions=10)
+
+agent = Agent(alpha=0.0025, beta=0.0025, input_dims=[104], tau=0.001, env=env,
+              batch_size=64,  layer1_size=512, layer2_size=512, n_actions=20)
 #agent.load_models()
 #agent.check_actor_params()
 '''
@@ -52,19 +53,20 @@ for i in range(tot_episodes):
                 #time.sleep(dt)
                 '''
                 act = agent.choose_action(obs)
-                new_state, reward, done = env.step(act)
+                new_state, reward, done, extra = env.step(act)
+                env.render()
                 #print(new_state)
                 agent.remember(obs, act, reward, new_state, int(done))
                 agent.learn()
                 score += reward
                 obs = new_state
-                #time.sleep(dt)
+                #time.sleep(3)
                 #env.render()
                 
-                print('timestep: ', tp,'sim time: %.2f'% env.sim_time,' reward: ',env.reward_t)
+                print('timestep: ', tp,'sim time: %.2f'% env.time,' reward: ',env.reward)
                 tp = tp + 1
         score_history.append(score)
-        print('episode: ', i,'score: %.2f' % score,'sim time: %.2f'% env.sim_time,' reward: ',env.reward_t)
+        print('episode: ', i,'score: %.2f' % score,'sim time: %.2f'% env.time,' reward: ',env.reward)
         #print('sim time: %.2f'% env.sim_time,' reward: ',env.reward_t)
         #print(env.obs_t, env.action)
         #print(env.reward_t)
