@@ -14,7 +14,7 @@ bot = CassieSim(model,terrain = False)
 class CassieEnv:
     def __init__(self, model, traj_path, simrate=60, clock_based=False):
         self.sim = CassieSim(model)
-        self.vis = None
+        self.vis = CassieVis(self.sim)
 
         # NOTE: Xie et al uses full reference trajectory info
         # (i.e. clock_based=False)
