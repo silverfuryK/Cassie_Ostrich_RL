@@ -147,6 +147,12 @@ class CassieEnv:
         self.sim.set_qvel(qvel)
 
         return self.get_full_state()
+
+    # check reset condition in step'
+    def check_reset(self):
+        if self.get_full_state()[2] < 0.3:
+            self.reset()
+
     
     def set_joint_pos(self, jpos, fbpos=None, iters=5000):
         """
