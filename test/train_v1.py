@@ -55,7 +55,7 @@ for i in range(tot_episodes):
                 #print(env.step(act))
                 new_state, reward, done, extra = env.step(act)
                 print(new_state[0:3])
-                env.render(env.sim)
+                env.render()
                 #print(new_state)
                 agent.remember(obs, act, reward, new_state, int(done))
                 agent.learn()
