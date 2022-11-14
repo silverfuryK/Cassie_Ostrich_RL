@@ -66,6 +66,12 @@ class CassieEnv:
         self.pos_idx = [6, 7, 8, 12, 18, 19, 20, 21, 25, 31]
         self.vel_idx = [6, 7, 8, 12, 18, 19, 20, 21, 25, 31]
         
+        self.get_init_pos()
+        self.get_init_vel()
+
+        #init states to be impleented with the checkreset and reset function
+        #self.init_qpos = 
+        
     
     def step_simulation(self, action):
         
@@ -97,6 +103,7 @@ class CassieEnv:
     def step(self, action):
         for _ in range(self.simrate):
             self.step_simulation(action)
+            self.check_reset()
 
         height = self.sim.qpos()[2]
 
@@ -128,10 +135,13 @@ class CassieEnv:
 
         self.reward = 0
 
+        self.action_space
+
         qpos, qvel = self.get_ref_state(self.phase)
 
-        self.sim.set_qpos(qpos)
-        self.sim.set_qvel(qvel)
+        self.sim.set_qpos(self.init_pose)
+        self.sim.set_qvel(self.init_vel)
+        #self.sim.set_geom_pos()
 
         return self.get_full_state()
 
@@ -150,7 +160,7 @@ class CassieEnv:
 
     # check reset condition in step'
     def check_reset(self):
-        if self.get_full_state()[2] < 0.3:
+        if self.sim.xpos('cassie-pelvis')[2] < 0.15:
             self.reset()
 
     
@@ -489,6 +499,14 @@ class CassieEnv:
         #    ext_state = np.concatenate([ref_pos, ref_vel])
 
         return np.concatenate([qvel[vel_index]])
+
+    def get_init_pos(self):
+        self.init_pose = self.get_pos()
+        return self.get_pos()
+
+    def get_init_vel(self):
+        self.init_vel = self.get_vel()
+        return self.get_vel()
 
 
     def render(self):
