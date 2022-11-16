@@ -66,6 +66,13 @@ class CassieEnv:
         self.pos_idx = [6, 7, 8, 12, 18, 19, 20, 21, 25, 31]
         self.vel_idx = [6, 7, 8, 12, 18, 19, 20, 21, 25, 31]
         
+        self.get_init_pos()
+        self.get_init_vel()
+        self.get_init_geom()
+
+        #init states to be impleented with the checkreset and reset function
+        #self.init_qpos = 
+        
     
     def step_simulation(self, action):
         
@@ -95,8 +102,10 @@ class CassieEnv:
         self.sim.step_pd(self.u)
 
     def step(self, action):
+        self.action_t = action
         for _ in range(self.simrate):
             self.step_simulation(action)
+            self.check_reset()
 
         height = self.sim.qpos()[2]
 
@@ -116,6 +125,9 @@ class CassieEnv:
         if reward < 0.3:
             done = True
 
+        print(self.get_full_state().shape)
+        print(reward)
+
         return self.get_full_state(), reward, done, {}
 
     def reset(self):
@@ -125,10 +137,20 @@ class CassieEnv:
 
         self.reward = 0
 
+        self.action_t = np.zeros(20)
+        #self.step(self.action_t)
+
         qpos, qvel = self.get_ref_state(self.phase)
 
-        self.sim.set_qpos(qpos)
-        self.sim.set_qvel(qvel)
+        for i in range(5000):
+
+            self.sim.set_qpos(self.init_pose)
+            self.sim.set_qvel(self.init_vel)
+            self.sim.set_geom_pos(self.init_geom)
+            self.sim.step_pd(pd_in_t())
+        #self.sim.set_geom_pos()
+
+        time.sleep(1)
 
         return self.get_full_state()
 
@@ -143,7 +165,16 @@ class CassieEnv:
         self.sim.set_qpos(qpos)
         self.sim.set_qvel(qvel)
 
+        time.sleep(1)
+
         return self.get_full_state()
+
+    # check reset condition in step'
+    def check_reset(self):
+        #print(self.sim.xpos('cassie-pelvis')[2])
+        if self.sim.xpos('cassie-pelvis')[2] < 0.20:
+            self.reset()
+
     
     def set_joint_pos(self, jpos, fbpos=None, iters=5000):
         """
@@ -480,6 +511,18 @@ class CassieEnv:
         #    ext_state = np.concatenate([ref_pos, ref_vel])
 
         return np.concatenate([qvel[vel_index]])
+
+    def get_init_pos(self):
+        self.init_pose = self.get_pos()
+        return self.get_pos()
+
+    def get_init_vel(self):
+        self.init_vel = 0*self.get_vel()
+        return self.get_vel()
+
+    def get_init_geom(self):
+        self.init_geom = self.sim.get_geom_pos()
+        return self.init_geom
 
 
     def render(self):
