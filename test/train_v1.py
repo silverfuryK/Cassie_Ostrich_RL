@@ -53,20 +53,23 @@ for i in range(tot_episodes):
                 #time.sleep(dt)
                 '''
                 act = agent.choose_action(obs)
+                #print(env.step(act))
                 new_state, reward, done, extra = env.step(act)
+                #print(new_state[0:3])
+                #print(env.sim.xpos('cassie-pelvis'))
                 env.render()
-                #print(new_state)
+                print(act.shape)
                 agent.remember(obs, act, reward, new_state, int(done))
                 agent.learn()
                 score += reward
                 obs = new_state
-                #time.sleep(3)
+                time.sleep(0.5)
                 #env.render()
                 
                 print('timestep: ', tp,'sim time: %.2f'% env.time,' reward: ',env.reward)
                 tp = tp + 1
         score_history.append(score)
-        print('episode: ', i,'score: %.2f' % score,'sim time: %.2f'% env.time,' reward: ',env.reward)
+        print('episode: ', i,'score: %.2f' % score,'sim time: %.2f'% env.time,' reward: ',env.reward_t)
         #print('sim time: %.2f'% env.sim_time,' reward: ',env.reward_t)
         #print(env.obs_t, env.action)
         #print(env.reward_t)
