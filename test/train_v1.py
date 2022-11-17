@@ -53,7 +53,7 @@ for i in range(tot_episodes):
                 '''
                 act = agent.choose_action(obs)
                 #print(env.step(act))
-                new_state, reward, done, extra = env.step(act)
+                new_state, reward, done, extra = env.step(0*act)
                 #print(new_state[0:3])
                 #print(env.sim.xpos('cassie-pelvis'))
                 env.render()

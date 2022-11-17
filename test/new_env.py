@@ -142,12 +142,14 @@ class CassieEnv:
 
         qpos, qvel = self.get_ref_state(self.phase)
 
-        for i in range(5000):
+        self.sim.full_reset()
 
-            self.sim.set_qpos(self.init_pose)
-            self.sim.set_qvel(self.init_vel)
-            self.sim.set_geom_pos(self.init_geom)
-            self.sim.step_pd(pd_in_t())
+        # for i in range(5000):
+
+        #     self.sim.set_qpos(self.init_pose)
+        #     self.sim.set_qvel(self.init_vel)
+        #     self.sim.set_geom_pos(self.init_geom)
+        #     self.sim.step_pd(pd_in_t())
         #self.sim.set_geom_pos()
 
         time.sleep(1)
@@ -513,15 +515,15 @@ class CassieEnv:
         return np.concatenate([qvel[vel_index]])
 
     def get_init_pos(self):
-        self.init_pose = self.get_pos()
+        self.init_pose = np.copy(self.get_pos())
         return self.get_pos()
 
     def get_init_vel(self):
-        self.init_vel = 0*self.get_vel()
+        self.init_vel = 0*np.copy(self.get_vel())
         return self.get_vel()
 
     def get_init_geom(self):
-        self.init_geom = self.sim.get_geom_pos()
+        self.init_geom = np.copy(self.sim.get_geom_pos())
         return self.init_geom
 
 
