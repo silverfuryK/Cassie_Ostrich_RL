@@ -52,6 +52,9 @@ class CassieEnv:
         self.phase   = 0 # portion of the phase the robot is in
         self.counter = 0 # number of phase cycles completed in episode
 
+        ##### basic signals #######
+        self.done = False
+
         # NOTE: a reference trajectory represents ONE phase cycle
 
         # should be floor(len(traj) / simrate) - 1
@@ -59,6 +62,7 @@ class CassieEnv:
         # badly can cause assymetrical/bad gaits
         #self.phaselen = floor(len(self.trajectory) / self.simrate) - 1
         self.phaselen = math.floor(len(self.qpos_targ)/self.simrate) -1
+        print('PhaseLen = ' + str(self.phaselen),' | traj len = ' + str())
 
         # see include/cassiemujoco.h for meaning of these indices
         #self.pos_idx = [7, 8, 9, 14, 20, 21, 22, 23, 28, 34]
@@ -117,7 +121,7 @@ class CassieEnv:
             self.counter += 1
 
         # Early termination
-        done = not(height > 0.4 and height < 3.0)
+        #done = not(height > 0.4 and height < 3.0)
 
         reward = self.compute_reward()
 
@@ -128,7 +132,7 @@ class CassieEnv:
         print(self.get_full_state().shape)
         print(reward)
 
-        return self.get_full_state(), reward, done, {}
+        return self.get_full_state(), reward, self.done, {}
 
     def reset(self):
         self.phase = random.randint(0, self.phaselen)
@@ -175,7 +179,10 @@ class CassieEnv:
     def check_reset(self):
         #print(self.sim.xpos('cassie-pelvis')[2])
         if self.sim.xpos('cassie-pelvis')[2] < 0.20:
+            self.done = True
             self.reset()
+        else:
+            self.done = False
 
     
     def set_joint_pos(self, jpos, fbpos=None, iters=5000):
