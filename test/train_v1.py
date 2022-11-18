@@ -36,6 +36,7 @@ for i in range(tot_episodes):
         obs = env.reset()
         done = False
         score = 0
+        print('EPISODE ' + str(i))
         while not done:
                 '''
                 cmd_vel = trajec.get_cmd_vel(sim_time)
@@ -58,7 +59,7 @@ for i in range(tot_episodes):
                 #print(new_state[0:3])
                 #print(env.sim.xpos('cassie-pelvis'))
                 env.render()
-                print(act.shape)
+                #print(act.shape)
                 agent.remember(obs, act, reward, new_state, int(done))
                 agent.learn()
                 score += reward

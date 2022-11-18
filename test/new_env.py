@@ -27,9 +27,9 @@ class CassieEnv:
             self.observation_space = np.zeros(80)
             self.action_space      = np.zeros(10)
             
-        self.qpos_targ = np.load(traj_path+"qpos/0001.npy")
-        self.qvel_targ = np.load(traj_path+"qvel/0001.npy")
-        self.xipos_targ = np.load(traj_path+"xipos/0001.npy")
+        self.qpos_targ = np.load(traj_path+"qpos/0010.npy")
+        self.qvel_targ = np.load(traj_path+"qvel/0010.npy")
+        self.xipos_targ = np.load(traj_path+"xipos/0010.npy")
 
         #dirname = os.path.dirname(__file__)
         #if traj == "walking":
@@ -109,7 +109,7 @@ class CassieEnv:
         self.action_t = action
         for _ in range(self.simrate):
             self.step_simulation(action)
-            self.check_reset()
+            
 
         height = self.sim.qpos()[2]
 
@@ -125,17 +125,19 @@ class CassieEnv:
 
         reward = self.compute_reward()
 
-        # TODO: make 0.3 a variable/more transparent
-        if reward < 0.3:
-            done = True
+        self.check_reset()
 
-        print(self.get_full_state().shape)
-        print(reward)
+        # TODO: make 0.3 a variable/more transparent
+        # if reward < 0.3:
+        #     self.done = True
+
+        #print(self.get_full_state().shape)
+        #print(reward)
 
         return self.get_full_state(), reward, self.done, {}
 
     def reset(self):
-        self.phase = random.randint(0, self.phaselen)
+        #self.phase = random.randint(0, self.phaselen)
         self.time = 0
         self.counter = 0
 
@@ -144,7 +146,7 @@ class CassieEnv:
         self.action_t = np.zeros(20)
         #self.step(self.action_t)
 
-        qpos, qvel = self.get_ref_state(self.phase)
+        #qpos, qvel = self.get_ref_state(self.phase)
 
         self.sim.full_reset()
 
