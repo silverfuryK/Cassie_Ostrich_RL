@@ -29,7 +29,7 @@ except:
 '''
 score_history = []
 i = 0
-tot_episodes = 1000
+tot_episodes = 20000
 max_tp = 60*60*10*10*2
 tp = 0
 for i in range(tot_episodes):
