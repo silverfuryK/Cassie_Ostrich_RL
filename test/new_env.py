@@ -15,6 +15,7 @@ class CassieEnv:
     def __init__(self, model, traj_path, simrate=60, clock_based=False):
         self.sim = CassieSim(model)
         self.vis = CassieVis(self.sim)
+        self.file_num = 1
 
         # NOTE: Xie et al uses full reference trajectory info
         # (i.e. clock_based=False)
@@ -27,9 +28,9 @@ class CassieEnv:
             self.observation_space = np.zeros(80)
             self.action_space      = np.zeros(10)
             
-        self.qpos_targ = np.load(traj_path+"qpos/0001.npy")
-        self.qvel_targ = np.load(traj_path+"qvel/0001.npy")
-        self.xipos_targ = np.load(traj_path+"xipos/0001.npy")
+        self.qpos_targ = np.load(traj_path+"command_pos_vel/qpos/" + str(self.file_num) + ".npy")
+        self.qvel_targ = np.load(traj_path+"command_pos_vel/qvel/" + str(self.file_num) + ".npy")
+        self.xipos_targ = np.load(traj_path+"xipos/" + str(self.file_num) + ".npy")
 
         #dirname = os.path.dirname(__file__)
         #if traj == "walking":
@@ -134,8 +135,13 @@ class CassieEnv:
         self.phase = random.randint(0, self.phaselen)
         self.time = 0
         self.counter = 0
-
+        self.file_num = (self.file_num % 35) + 1
         self.reward = 0
+
+        self.qpos_targ = np.load(traj_path+"command_pos_vel/qpos/" + str(self.file_num) + ".npy")
+        self.qvel_targ = np.load(traj_path+"command_pos_vel/qvel/" + str(self.file_num) + ".npy")
+        self.xipos_targ = np.load(traj_path+"xipos/" + str(self.file_num) + ".npy")
+
 
         self.action_t = np.zeros(20)
         #self.step(self.action_t)
