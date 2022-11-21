@@ -34,6 +34,8 @@ class CassieEnv:
         self.cmd_vel_targ = np.load(self.traj_path+"command_pos_vel/qvel/" + str(self.file_num) + ".npy")
         self.xipos_targ = np.load(self.traj_path+"xipos/" + str(self.file_num) + ".npy")
 
+        print(self.qpos_targ.shape)
+        print(self.cmd_vel_targ.shape)
         #dirname = os.path.dirname(__file__)
         #if traj == "walking":
         #    traj_path = os.path.join(dirname, "trajectory", "stepdata.bin")
@@ -141,6 +143,7 @@ class CassieEnv:
 
     def reset(self):
         #self.phase = random.randint(0, self.phaselen)
+        self.phase = 0
         self.time = 0
         self.counter = 0
 
@@ -159,12 +162,12 @@ class CassieEnv:
 
         self.sim.full_reset()
 
-        # for i in range(5000):
+        for i in range(5000):
 
-        #     self.sim.set_qpos(self.init_pose)
-        #     self.sim.set_qvel(self.init_vel)
-        #     self.sim.set_geom_pos(self.init_geom)
-        #     self.sim.step_pd(pd_in_t())
+            self.sim.set_qpos(self.init_pose)
+            self.sim.set_qvel(self.init_vel)
+            self.sim.set_geom_pos(self.init_geom)
+            self.sim.step_pd(pd_in_t())
         #self.sim.set_geom_pos()
 
         #time.sleep(1)
@@ -232,7 +235,7 @@ class CassieEnv:
     def compute_reward(self):
         qpos = np.copy(self.sim.qpos())
 
-        ref_pos, ref_vel = np.copy(self.get_ref_state(self.phase))
+        ref_pos, ref_vel, targ_vel = np.copy(self.get_ref_state(self.phase))
 
         weight = [0.15, 0.15, 0.1, 0.05, 0.05, 0.15, 0.15, 0.1, 0.05, 0.05]
 
@@ -246,6 +249,7 @@ class CassieEnv:
             target = ref_pos[j]
             actual = qpos[j]
 
+
             joint_error += 30 * weight[i] * (target - actual) ** 2
         
 
@@ -254,11 +258,12 @@ class CassieEnv:
         for j in [0, 1, 2]:
             target = ref_pos[j]
             actual = qpos[j]
+            print('targ = '+str(target)+'actual = '+str(actual))
 
             # NOTE: in Xie et al y target is 0
 
             com_error += (target - actual) ** 2
-        
+        print("--")        
         # COM orientation: qx, qy, qz
         for j in [4, 5, 6]:
             target = ref_pos[j] # NOTE: in Xie et al orientation target is 0
@@ -290,6 +295,7 @@ class CassieEnv:
 
         #pos = np.copy(self.trajectory.qpos[phase * self.simrate])
         pos = np.copy(self.qpos_targ[phase,:])
+        targ_vel = np.copy(self.cmd_vel_targ[phase,:])
 
         # this is just setting the x to where it "should" be given the number
         # of cycles
@@ -304,13 +310,13 @@ class CassieEnv:
         #vel = np.copy(self.trajectory.qvel[phase * self.simrate])
         vel = np.copy(self.qvel_targ[phase,:])
 
-        return pos, vel
+        return pos, vel, targ_vel
 
     def get_full_state(self):
         qpos = np.copy(self.sim.qpos())
         qvel = np.copy(self.sim.qvel()) 
 
-        ref_pos, ref_vel = self.get_ref_state(self.phase + 1)
+        ref_pos, ref_vel, cmd_vel = self.get_ref_state(self.phase + 1)
         #print(ref_pos)
 
 

@@ -64,7 +64,7 @@ for i in range(tot_episodes):
                 agent.learn()
                 score += reward
                 obs = new_state
-                #time.sleep(0.5)
+                time.sleep(1)
                 #env.render()
                 
                 print('timestep: ', tp,'sim time: %.2f'% env.time,' reward: ',env.reward)
