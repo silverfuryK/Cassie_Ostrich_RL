@@ -135,7 +135,7 @@ class CassieEnv:
         self.phase = random.randint(0, self.phaselen)
         self.time = 0
         self.counter = 0
-        self.file_num = (self.file_num % 35) + 1
+        self.file_num = random.randint(0, 35)
         self.reward = 0
 
         self.qpos_targ = np.load(traj_path+"command_pos_vel/qpos/" + str(self.file_num) + ".npy")
