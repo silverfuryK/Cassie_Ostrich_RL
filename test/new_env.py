@@ -15,6 +15,8 @@ class CassieEnv:
     def __init__(self, model, traj_path, simrate=60, clock_based=False):
         self.sim = CassieSim(model)
         self.vis = CassieVis(self.sim)
+        self.traj_path = 'ostrichrl/ostrichrl/assets/mocap/cassie/'
+        self.file_num = random.randint(0, 35)
 
         # NOTE: Xie et al uses full reference trajectory info
         # (i.e. clock_based=False)
@@ -27,9 +29,10 @@ class CassieEnv:
             self.observation_space = np.zeros(80)
             self.action_space      = np.zeros(10)
             
-        self.qpos_targ = np.load(traj_path+"qpos/0010.npy")
-        self.qvel_targ = np.load(traj_path+"qvel/0010.npy")
-        self.xipos_targ = np.load(traj_path+"xipos/0010.npy")
+        self.qpos_targ = np.load(self.traj_path+"qpos/" + str(self.file_num) + ".npy")
+        self.qvel_targ = np.load(self.traj_path+"qvel/" + str(self.file_num) + ".npy")
+        self.cmd_vel_targ = np.load(self.traj_path+"command_pos_vel/qvel/" + str(self.file_num) + ".npy")
+        self.xipos_targ = np.load(self.traj_path+"xipos/" + str(self.file_num) + ".npy")
 
         #dirname = os.path.dirname(__file__)
         #if traj == "walking":
@@ -144,9 +147,10 @@ class CassieEnv:
         self.file_num = random.randint(0, 35)
         self.reward = 0
 
-        self.qpos_targ = np.load(traj_path+"command_pos_vel/qpos/" + str(self.file_num) + ".npy")
-        self.qvel_targ = np.load(traj_path+"command_pos_vel/qvel/" + str(self.file_num) + ".npy")
-        self.xipos_targ = np.load(traj_path+"xipos/" + str(self.file_num) + ".npy")
+        self.qpos_targ = np.load(self.traj_path+"qpos/" + str(self.file_num) + ".npy")
+        self.qvel_targ = np.load(self.traj_path+"qvel/" + str(self.file_num) + ".npy")
+        self.cmd_vel_targ = np.load(self.traj_path+"command_pos_vel/qvel/" + str(self.file_num) + ".npy")
+        self.xipos_targ = np.load(self.traj_path+"xipos/" + str(self.file_num) + ".npy")
 
         self.action_t = np.zeros(20)
         #self.step(self.action_t)
@@ -228,7 +232,7 @@ class CassieEnv:
     def compute_reward(self):
         qpos = np.copy(self.sim.qpos())
 
-        ref_pos, ref_vel = self.get_ref_state(self.phase)
+        ref_pos, ref_vel = np.copy(self.get_ref_state(self.phase))
 
         weight = [0.15, 0.15, 0.1, 0.05, 0.05, 0.15, 0.15, 0.1, 0.05, 0.05]
 
@@ -308,6 +312,8 @@ class CassieEnv:
 
         ref_pos, ref_vel = self.get_ref_state(self.phase + 1)
         #print(ref_pos)
+
+
 
         # this is everything except pelvis x and qw, achilles rod quaternions, 
         # and heel spring/foot crank/plantar rod angles
