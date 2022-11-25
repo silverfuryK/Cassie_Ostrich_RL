@@ -70,10 +70,42 @@ class CassieEnv:
         print('PhaseLen = ' + str(self.phaselen),' | traj len = ' + str())
 
         # see include/cassiemujoco.h for meaning of these indices
-        #self.pos_idx = [7, 8, 9, 14, 20, 21, 22, 23, 28, 34]
+
+        # // [ 6] Pelvis orientation qz
+        # // [ 7] Left hip roll         (Motor [0])
+        # // [ 8] Left hip yaw          (Motor [1])
+        # // [ 9] Left hip pitch        (Motor [2])
+        # // [10] Left achilles rod qw
+        # // [11] Left achilles rod qx
+        # // [12] Left achilles rod qy
+        # // [13] Left achilles rod qz
+        # // [14] Left knee             (Motor [3])
+        # // [15] Left shin                        (Joint [0])
+        # // [16] Left tarsus                      (Joint [1])
+        # // [17] Left heel spring
+        # // [18] Left foot crank
+        # // [19] Left plantar rod
+        # // [20] Left foot             (Motor [4], Joint [2])
+        # // [21] Right hip roll        (Motor [5])
+        # // [22] Right hip yaw         (Motor [6])
+        # // [23] Right hip pitch       (Motor [7])
+        # // [24] Right achilles rod qw
+        # // [25] Right achilles rod qx
+        # // [26] Right achilles rod qy
+        # // [27] Right achilles rod qz
+        # // [28] Right knee            (Motor [8])
+        # // [29] Right shin                       (Joint [3])
+        # // [30] Right tarsus                     (Joint [4])
+        # // [31] Right heel spring
+
+        self.pos_idx = [7, 8, 9, 14, 20, 21, 22, 23, 28, 34]
+        self.pos_idx_eq = [6, 7, 8, 12, 18, 19, 20, 21, 25, 31]
         #self.vel_idx = [6, 7, 8, 12, 18, 19, 20, 21, 25, 31]
-        self.pos_idx = [6, 7, 8, 12, 18, 19, 20, 21, 25, 31]
+        #self.pos_idx = [6, 7, 8, 12, 18, 19, 20, 21, 25, 31]
         self.vel_idx = [6, 7, 8, 12, 18, 19, 20, 21, 25, 31]
+
+        self.pos_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
+        self.vel_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
         
         self.get_init_pos()
         self.get_init_vel()
@@ -162,15 +194,22 @@ class CassieEnv:
 
         self.sim.full_reset()
 
-        for i in range(5000):
+        ###### RESET THE POSE TO THE SAME AS THE POSE IN TRAJECTORY ##########
 
-            self.sim.set_qpos(self.init_pose)
-            self.sim.set_qvel(self.init_vel)
-            self.sim.set_geom_pos(self.init_geom)
-            self.sim.step_pd(pd_in_t())
+        #for i in range(5000):
+
+        # self.sim.set_qpos(self.init_pose)
+        # self.sim.set_qvel(self.init_vel)
+        # self.sim.set_geom_pos(self.init_geom)
+        
+        #self.sim.step_pd(pd_in_t())
         #self.sim.set_geom_pos()
+        self.sim.set_qpos(self.get_init_pos())
+        self.sim.set_qvel(self.get_init_vel())
+        #self.sim.set_geom_pos(self.get_init_geom())
+        
 
-        #time.sleep(1)
+        time.sleep(1)
 
         return self.get_full_state()
 
@@ -234,6 +273,7 @@ class CassieEnv:
     # see notes for details
     def compute_reward(self):
         qpos = np.copy(self.sim.qpos())
+        qvel = np.copy(self.sim.qvel())
 
         ref_pos, ref_vel, targ_vel = np.copy(self.get_ref_state(self.phase))
 
@@ -243,18 +283,24 @@ class CassieEnv:
         com_error         = 0
         orientation_error = 0
         spring_error      = 0
+        vel_error         = 0
 
         # each joint pos
-        for i, j in enumerate(self.pos_idx):
-            target = ref_pos[j]
-            actual = qpos[j]
+        # for i, j in enumerate(self.pos_idx):
+        #     target = ref_pos[j]
+        #     actual = qpos[j]
 
 
-            joint_error += 30 * weight[i] * (target - actual) ** 2
+        #     joint_error += 30 * weight[i] * (target - actual) ** 2
+
+        target = ref_pos[self.pos_idx_eq]
+        actual = qpos[self.pos_idx]
+        joint_error = sum(30 * (weight * (target-actual)) ** 2)
         
 
         # center of mass: x, y, z
         ## LOOK AT THE COM IN THE REF TRAJ AND THE INITIALIZED ONE!!!!
+        print("pos error")
         for j in [0, 1, 2]:
             target = ref_pos[j]
             actual = qpos[j]
@@ -263,35 +309,50 @@ class CassieEnv:
             # NOTE: in Xie et al y target is 0
 
             com_error += (target - actual) ** 2
-        print("--")        
+               
         # COM orientation: qx, qy, qz
+        print("orientation error")
         for j in [4, 5, 6]:
             target = ref_pos[j] # NOTE: in Xie et al orientation target is 0
             actual = qpos[j]
+            print('targ = '+str(target)+'actual = '+str(actual))
 
             orientation_error += (target - actual) ** 2
-
+        print("--") 
+        
         # left and right shin springs
         for i in [15, 29]:
             target = ref_pos[i] # NOTE: in Xie et al spring target is 0
             actual = qpos[i]
 
-            spring_error += 1000 * (target - actual) ** 2      
+            spring_error += 1000 * (target - actual) ** 2     
+
+        # target vel error
+
+        for j in [0, 1 ,2]:
+            target = ref_vel[j] # NOTE: in Xie et al orientation target is 0
+            actual = qvel[j]
+            print('targ = '+str(target)+'actual = '+str(actual))
+
+            vel_error += (target - actual) ** 2
+        print("--") 
         
         self.reward = 0.5 * np.exp(-joint_error) +       \
                  0.3 * np.exp(-com_error) +         \
-                 0.1 * np.exp(-orientation_error) + \
-                 0.1 * np.exp(-spring_error)
+                 0.3 * np.exp(-orientation_error) + \
+                 0.1 * np.exp(-spring_error) + \
+                 0.4 * np.exp(-vel_error)
 
         return self.reward
 
     # get the corresponding state from the reference trajectory for the current phase
     def get_ref_state(self, phase=None):
-        if phase is None:
-            phase = self.phase
 
-        if phase > self.phaselen:
-            phase = 0
+        # if phase is None:
+        #     phase = self.phase
+
+        # if phase > self.phaselen:
+        #     phase = 0
 
         #pos = np.copy(self.trajectory.qpos[phase * self.simrate])
         pos = np.copy(self.qpos_targ[phase,:])
@@ -351,6 +412,7 @@ class CassieEnv:
         # [18] Right tarsus                     (Joint [4])
         # [19] Right foot            (Motor [9], Joint [5])
         pos_index = np.array([1,2,3,4,5,6,7,8,9,14,15,16,20,21,22,23,28,29,30,34])
+        #pos_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
 
         # [ 0] Pelvis x
         # [ 1] Pelvis y
@@ -427,6 +489,7 @@ class CassieEnv:
         # [18] Right tarsus                     (Joint [4])
         # [19] Right foot            (Motor [9], Joint [5])
         pos_index = np.array([1,2,3,4,5,6,7,8,9,14,15,16,20,21,22,23,28,29,30,34])
+        #pos_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
 
         # [ 0] Pelvis x
         # [ 1] Pelvis y
@@ -502,7 +565,8 @@ class CassieEnv:
         # [17] Right shin                       (Joint [3])
         # [18] Right tarsus                     (Joint [4])
         # [19] Right foot            (Motor [9], Joint [5])
-        pos_index = np.array([1,2,3,4,5,6,7,8,9,14,15,16,20,21,22,23,28,29,30,34])
+        #pos_index = np.array([1,2,3,4,5,6,7,8,9,14,15,16,20,21,22,23,28,29,30,34])
+        pos_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
 
         # [ 0] Pelvis x
         # [ 1] Pelvis y
@@ -542,15 +606,31 @@ class CassieEnv:
         return np.concatenate([qvel[vel_index]])
 
     def get_init_pos(self):
-        self.init_pose = np.copy(self.get_pos())
+        #self.init_pose = np.copy(self.get_pos())
+        self.init_pose = np.copy(self.sim.qpos())
+        #print(self.init_pose)
+        #print(self.qpos_targ[:,self.phase][0])
+        for i, j in enumerate(self.pos_index):
+            self.init_pose[j] = np.copy(self.qpos_targ[self.phase][i])
+
         return self.get_pos()
 
     def get_init_vel(self):
-        self.init_vel = 0*np.copy(self.get_vel())
+        #self.init_vel = np.copy(self.get_vel())
+        self.init_vel = np.copy(self.sim.qvel())
+        for i, j in enumerate(self.vel_index):
+            self.init_vel[j] = np.copy(self.qvel_targ[self.phase][i])
+
         return self.get_vel()
 
+#NEED TO WORK ON GEOM
     def get_init_geom(self):
-        self.init_geom = np.copy(self.sim.get_geom_pos())
+        self.init_geom = np.copy(self.sim.get_geom_pos('cassie-pelvis'))
+        #self.init_geom = np.copy(self.sim.xpos("cassie-pelvis"))
+        #print(self.init_pose)
+        #print(self.qpos_targ[:,self.phase][0])
+        for i in range(3):
+            self.init_geom[i] = np.copy(self.xipos_targ[self.phase,0,i])
         return self.init_geom
 
 
