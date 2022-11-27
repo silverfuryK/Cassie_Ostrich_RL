@@ -17,7 +17,7 @@ env = CassieEnv(model,traj_path,60)
 
 
 
-agent = Agent(alpha=0.01, beta=0.0025, input_dims=[104], tau=0.001, env=env,
+agent = Agent(alpha=0.01, beta=0.0025, input_dims=[92], tau=0.001, env=env,
               batch_size=128,  layer1_size=128, layer2_size=128, n_actions=20)
 #agent.load_models()
 #agent.check_actor_params()
@@ -30,11 +30,12 @@ except:
 '''
 score_history = []
 i = 0
-tot_episodes = 20000
+tot_episodes = 200000
 max_tp = 60*60*10*10*2
 tp = 0
 for i in range(tot_episodes):
         obs = env.reset()
+        print(obs.shape)
         done = False
         score = 0
         print('EPISODE ' + str(i))
@@ -65,7 +66,7 @@ for i in range(tot_episodes):
                 agent.learn()
                 score += reward
                 obs = new_state
-                time.sleep(1)
+                #time.sleep(1)
                 #env.render()
                 
                 print('timestep: ', tp,'sim time: %.2f'% env.time,' reward: ',env.reward)

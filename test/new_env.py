@@ -67,7 +67,7 @@ class CassieEnv:
         # badly can cause assymetrical/bad gaits
         #self.phaselen = floor(len(self.trajectory) / self.simrate) - 1
         self.phaselen = math.floor(len(self.qpos_targ)/self.simrate) -1
-        print('PhaseLen = ' + str(self.phaselen),' | traj len = ' + str())
+        print('PhaseLen = ' + str(self.phaselen),' | traj len = ' + str(len(self.qpos_targ)))
 
         # see include/cassiemujoco.h for meaning of these indices
 
@@ -104,8 +104,11 @@ class CassieEnv:
         #self.pos_idx = [6, 7, 8, 12, 18, 19, 20, 21, 25, 31]
         self.vel_idx = [6, 7, 8, 12, 18, 19, 20, 21, 25, 31]
 
-        self.pos_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
-        self.vel_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
+        #self.pos_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
+        #self.vel_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
+
+        self.pos_index = np.array([7,8,9,14,15,16,20,21,22,23,28,29,30,34])
+        self.vel_index = np.array([6,7,8,12,13,14,18,19,20,21,25,26,27,31])
         
         self.get_init_pos()
         self.get_init_vel()
@@ -170,6 +173,7 @@ class CassieEnv:
 
         #print(self.get_full_state().shape)
         #print(reward)
+        print(self.phase)
 
         return self.get_full_state(), reward, self.done, {}
 
@@ -179,13 +183,17 @@ class CassieEnv:
         self.time = 0
         self.counter = 0
 
-        self.file_num = random.randint(0, 35)
+        self.file_num = random.randint(1, 35)
         self.reward = 0
 
         self.qpos_targ = np.load(self.traj_path+"qpos/" + str(self.file_num) + ".npy")
+        print(self.qpos_targ.shape)
         self.qvel_targ = np.load(self.traj_path+"qvel/" + str(self.file_num) + ".npy")
         self.cmd_vel_targ = np.load(self.traj_path+"command_pos_vel/qvel/" + str(self.file_num) + ".npy")
         self.xipos_targ = np.load(self.traj_path+"xipos/" + str(self.file_num) + ".npy")
+
+        self.phaselen = math.floor(len(self.qpos_targ)/self.simrate) -1
+        print('PhaseLen = ' + str(self.phaselen),' | traj len = ' + str(len(self.qpos_targ)))
 
         self.action_t = np.zeros(20)
         #self.step(self.action_t)
@@ -201,15 +209,16 @@ class CassieEnv:
         # self.sim.set_qpos(self.init_pose)
         # self.sim.set_qvel(self.init_vel)
         # self.sim.set_geom_pos(self.init_geom)
+        #self.sim.set_geom_pos([0,1,-1,-1],'cassie-pelvis')
         
         #self.sim.step_pd(pd_in_t())
         #self.sim.set_geom_pos()
-        self.sim.set_qpos(self.get_init_pos())
-        self.sim.set_qvel(self.get_init_vel())
+        #self.sim.set_qpos(self.get_init_pos())
+        #self.sim.set_qvel(self.get_init_vel())
         #self.sim.set_geom_pos(self.get_init_geom())
         
 
-        time.sleep(1)
+        #time.sleep(1)
 
         return self.get_full_state()
 
@@ -300,25 +309,25 @@ class CassieEnv:
 
         # center of mass: x, y, z
         ## LOOK AT THE COM IN THE REF TRAJ AND THE INITIALIZED ONE!!!!
-        print("pos error")
+        #print("pos error")
         for j in [0, 1, 2]:
             target = ref_pos[j]
             actual = qpos[j]
-            print('targ = '+str(target)+'actual = '+str(actual))
+            #print('targ = '+str(target)+'actual = '+str(actual))
 
             # NOTE: in Xie et al y target is 0
 
             com_error += (target - actual) ** 2
                
         # COM orientation: qx, qy, qz
-        print("orientation error")
+        #print("orientation error")
         for j in [4, 5, 6]:
             target = ref_pos[j] # NOTE: in Xie et al orientation target is 0
             actual = qpos[j]
-            print('targ = '+str(target)+'actual = '+str(actual))
+            #print('targ = '+str(target)+'actual = '+str(actual))
 
             orientation_error += (target - actual) ** 2
-        print("--") 
+        #print("--") 
         
         # left and right shin springs
         for i in [15, 29]:
@@ -332,14 +341,14 @@ class CassieEnv:
         for j in [0, 1 ,2]:
             target = ref_vel[j] # NOTE: in Xie et al orientation target is 0
             actual = qvel[j]
-            print('targ = '+str(target)+'actual = '+str(actual))
+            #print('targ = '+str(target)+'actual = '+str(actual))
 
             vel_error += (target - actual) ** 2
-        print("--") 
+        #print("--") 
         
         self.reward = 0.5 * np.exp(-joint_error) +       \
                  0.3 * np.exp(-com_error) +         \
-                 0.3 * np.exp(-orientation_error) + \
+                 0.0 * np.exp(-orientation_error) + \
                  0.1 * np.exp(-spring_error) + \
                  0.4 * np.exp(-vel_error)
 
@@ -356,7 +365,7 @@ class CassieEnv:
 
         #pos = np.copy(self.trajectory.qpos[phase * self.simrate])
         pos = np.copy(self.qpos_targ[phase,:])
-        targ_vel = np.copy(self.cmd_vel_targ[phase,:])
+        targ_vel = np.copy(self.cmd_vel_targ[:,phase])
 
         # this is just setting the x to where it "should" be given the number
         # of cycles
@@ -411,9 +420,13 @@ class CassieEnv:
         # [17] Right shin                       (Joint [3])
         # [18] Right tarsus                     (Joint [4])
         # [19] Right foot            (Motor [9], Joint [5])
-        pos_index = np.array([1,2,3,4,5,6,7,8,9,14,15,16,20,21,22,23,28,29,30,34])
+
+        #pos_index = np.array([1,2,3,4,5,6,7,8,9,14,15,16,20,21,22,23,28,29,30,34]) # 20 in nos
         #pos_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
 
+        #test config
+
+        pos_index = np.array([7,8,9,14,15,16,20,21,22,23,28,29,30,34]) # 14 in nos
         # [ 0] Pelvis x
         # [ 1] Pelvis y
         # [ 2] Pelvis z
@@ -434,7 +447,10 @@ class CassieEnv:
         # [17] Right shin                       (Joint [3])
         # [18] Right tarsus                     (Joint [4])
         # [19] Right foot            (Motor [9], Joint [5])
-        vel_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
+        
+        #vel_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
+
+        vel_index = np.array([6,7,8,12,13,14,18,19,20,21,25,26,27,31])
 
         if self.clock_based:
             #qpos[self.pos_idx] -= ref_pos[self.pos_idx]
