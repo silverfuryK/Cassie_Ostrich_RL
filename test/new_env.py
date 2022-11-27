@@ -16,7 +16,7 @@ class CassieEnv:
         self.sim = CassieSim(model)
         self.vis = CassieVis(self.sim)
         self.traj_path = 'ostrichrl/ostrichrl/assets/mocap/cassie/'
-        self.file_num = random.randint(0, 35)
+        self.file_num = random.randint(1, 35)
 
         # NOTE: Xie et al uses full reference trajectory info
         # (i.e. clock_based=False)
@@ -109,6 +109,8 @@ class CassieEnv:
 
         self.pos_index = np.array([7,8,9,14,15,16,20,21,22,23,28,29,30,34])
         self.vel_index = np.array([6,7,8,12,13,14,18,19,20,21,25,26,27,31])
+
+        self.ref_index = np.array([6,7,8,12,13,14,18,19,20,21,25,26,27,31])
         
         self.get_init_pos()
         self.get_init_vel()
@@ -125,6 +127,7 @@ class CassieEnv:
         #ref_pos, ref_vel = self.get_ref_state(self.phase + 1)
 
         target = action + self.get_pos()
+        target = target[[0,1,2,3,6,7,8,9,10,13]]
 
         self.u = pd_in_t()
         for i in range(5):
@@ -187,7 +190,7 @@ class CassieEnv:
         self.reward = 0
 
         self.qpos_targ = np.load(self.traj_path+"qpos/" + str(self.file_num) + ".npy")
-        print(self.qpos_targ.shape)
+        #print(self.qpos_targ.shape)
         self.qvel_targ = np.load(self.traj_path+"qvel/" + str(self.file_num) + ".npy")
         self.cmd_vel_targ = np.load(self.traj_path+"command_pos_vel/qvel/" + str(self.file_num) + ".npy")
         self.xipos_targ = np.load(self.traj_path+"xipos/" + str(self.file_num) + ".npy")
@@ -302,7 +305,7 @@ class CassieEnv:
 
         #     joint_error += 30 * weight[i] * (target - actual) ** 2
 
-        target = ref_pos[self.pos_idx_eq]
+        target = ref_pos[[0,1,2,3,6,7,8,9,10,13]]
         actual = qpos[self.pos_idx]
         joint_error = sum(30 * (weight * (target-actual)) ** 2)
         
@@ -330,16 +333,16 @@ class CassieEnv:
         #print("--") 
         
         # left and right shin springs
-        for i in [15, 29]:
-            target = ref_pos[i] # NOTE: in Xie et al spring target is 0
-            actual = qpos[i]
+        #for i in [15, 29]:
+        #    target = ref_pos[i] # NOTE: in Xie et al spring target is 0
+        #    actual = qpos[i]
 
-            spring_error += 1000 * (target - actual) ** 2     
+        #    spring_error += 1000 * (target - actual) ** 2     
 
         # target vel error
 
         for j in [0, 1 ,2]:
-            target = ref_vel[j] # NOTE: in Xie et al orientation target is 0
+            target = targ_vel[j] # NOTE: in Xie et al orientation target is 0
             actual = qvel[j]
             #print('targ = '+str(target)+'actual = '+str(actual))
 
@@ -364,7 +367,7 @@ class CassieEnv:
         #     phase = 0
 
         #pos = np.copy(self.trajectory.qpos[phase * self.simrate])
-        pos = np.copy(self.qpos_targ[phase,:])
+        pos = np.copy(self.qpos_targ[phase,self.ref_index])
         targ_vel = np.copy(self.cmd_vel_targ[:,phase])
 
         # this is just setting the x to where it "should" be given the number
@@ -378,7 +381,7 @@ class CassieEnv:
         #pos[1] = 0
 
         #vel = np.copy(self.trajectory.qvel[phase * self.simrate])
-        vel = np.copy(self.qvel_targ[phase,:])
+        vel = np.copy(self.qvel_targ[phase,self.ref_index])
 
         return pos, vel, targ_vel
 
@@ -386,7 +389,7 @@ class CassieEnv:
         qpos = np.copy(self.sim.qpos())
         qvel = np.copy(self.sim.qvel()) 
 
-        ref_pos, ref_vel, cmd_vel = self.get_ref_state(self.phase + 1)
+        ref_pos, ref_vel, cmd_vel = self.get_ref_state(self.phase)
         #print(ref_pos)
 
 
@@ -504,8 +507,13 @@ class CassieEnv:
         # [17] Right shin                       (Joint [3])
         # [18] Right tarsus                     (Joint [4])
         # [19] Right foot            (Motor [9], Joint [5])
-        pos_index = np.array([1,2,3,4,5,6,7,8,9,14,15,16,20,21,22,23,28,29,30,34])
+        
+        #pos_index = np.array([1,2,3,4,5,6,7,8,9,14,15,16,20,21,22,23,28,29,30,34])
         #pos_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
+
+        pos_index = np.array([7,8,9,14,15,16,20,21,22,23,28,29,30,34]) # 14 in nos
+
+
 
         # [ 0] Pelvis x
         # [ 1] Pelvis y
@@ -527,7 +535,10 @@ class CassieEnv:
         # [17] Right shin                       (Joint [3])
         # [18] Right tarsus                     (Joint [4])
         # [19] Right foot            (Motor [9], Joint [5])
-        vel_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
+        
+        #vel_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
+
+        vel_index = np.array([6,7,8,12,13,14,18,19,20,21,25,26,27,31])
 
         #if self.clock_based:
             #qpos[self.pos_idx] -= ref_pos[self.pos_idx]
@@ -581,8 +592,11 @@ class CassieEnv:
         # [17] Right shin                       (Joint [3])
         # [18] Right tarsus                     (Joint [4])
         # [19] Right foot            (Motor [9], Joint [5])
+        
         #pos_index = np.array([1,2,3,4,5,6,7,8,9,14,15,16,20,21,22,23,28,29,30,34])
-        pos_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
+        #pos_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
+
+        pos_index = np.array([7,8,9,14,15,16,20,21,22,23,28,29,30,34]) # 14 in nos
 
         # [ 0] Pelvis x
         # [ 1] Pelvis y
@@ -604,7 +618,10 @@ class CassieEnv:
         # [17] Right shin                       (Joint [3])
         # [18] Right tarsus                     (Joint [4])
         # [19] Right foot            (Motor [9], Joint [5])
-        vel_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
+        
+        #vel_index = np.array([0,1,2,3,4,5,6,7,8,12,13,14,18,19,20,21,25,26,27,31])
+
+        vel_index = np.array([6,7,8,12,13,14,18,19,20,21,25,26,27,31])
 
         #if self.clock_based:
             #qpos[self.pos_idx] -= ref_pos[self.pos_idx]

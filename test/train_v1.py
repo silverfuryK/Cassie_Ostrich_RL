@@ -8,8 +8,8 @@ from ddpg_ac import Agent
 from a_c_test_agent import NewAgent
 from cassiemujoco import *
 
-#model = '/home/k38/Cassie_Ostrich_RL/test/cassie.xml'
-model = '/home/fury/OstrichCassie/Cassie_Ostrich_RL/test/cassie.xml'
+model = '/home/k38/Cassie_Ostrich_RL/test/cassie.xml'
+#model = '/home/fury/OstrichCassie/Cassie_Ostrich_RL/test/cassie.xml'
 traj_path = 'ostrichrl/ostrichrl/assets/mocap/cassie/'
 bot = CassieSim(model,terrain = False)
 
@@ -17,8 +17,8 @@ env = CassieEnv(model,traj_path,60)
 
 
 
-agent = Agent(alpha=0.01, beta=0.0025, input_dims=[92], tau=0.001, env=env,
-              batch_size=128,  layer1_size=128, layer2_size=128, n_actions=20)
+agent = Agent(alpha=0.01, beta=0.0025, input_dims=[56], tau=0.001, env=env,
+              batch_size=128,  layer1_size=128, layer2_size=128, n_actions=14)
 #agent.load_models()
 #agent.check_actor_params()
 '''
