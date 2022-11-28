@@ -159,9 +159,12 @@ class CassieEnv:
         self.time  += 1
         self.phase += 1
 
-        if self.phase > self.phaselen:
-            self.phase = 0
-            self.counter += 1
+        print(self.phase)
+
+        # if self.phase > self.phaselen:
+        #     self.phase = 0
+        #     self.counter += 1
+        self.counter += 1
 
         # Early termination
         #done = not(height > 0.4 and height < 3.0)
@@ -172,8 +175,8 @@ class CassieEnv:
 
         f = self.check_reset()
 
-        if f:
-            reward = reward - 500
+        #if f:
+        #    reward = reward - 500
 
 
         # TODO: make 0.3 a variable/more transparent
@@ -199,10 +202,11 @@ class CassieEnv:
         #print(self.qpos_targ.shape)
         self.qvel_targ = np.load(self.traj_path+"qvel/" + str(self.file_num) + ".npy")
         self.cmd_vel_targ = np.load(self.traj_path+"command_pos_vel/qvel/" + str(self.file_num) + ".npy")
+        print(self.cmd_vel_targ.shape)
         self.xipos_targ = np.load(self.traj_path+"xipos/" + str(self.file_num) + ".npy")
 
         self.phaselen = math.floor(len(self.qpos_targ)/self.simrate) -1
-        #print('PhaseLen = ' + str(self.phaselen),' | traj len = ' + str(len(self.qpos_targ)))
+        print('PhaseLen = ' + str(self.phaselen),' | traj len = ' + str(len(self.qpos_targ)))
 
         self.action_t = np.zeros(20)
         #self.step(self.action_t)
@@ -210,6 +214,7 @@ class CassieEnv:
         #qpos, qvel = self.get_ref_state(self.phase)
 
         self.sim.full_reset()
+        self.sim.hold()
 
         ###### RESET THE POSE TO THE SAME AS THE POSE IN TRAJECTORY ##########
 
@@ -249,8 +254,13 @@ class CassieEnv:
     # check reset condition in step'
     def check_reset(self):
         #print(self.sim.xpos('cassie-pelvis')[2])
+        if self.phase == len(self.qpos_targ)-1:
+            self.done = True
+            self.reset()
+            return True
+        
         if self.sim.xpos('cassie-pelvis')[2] < 0.4:
-            self.reward = self.reward - 500
+            #self.reward = self.reward - 500
             self.done = True
             self.reset()
             return True
@@ -296,7 +306,7 @@ class CassieEnv:
         qpos = np.copy(self.sim.qpos())
         qvel = np.copy(self.sim.qvel())
 
-        ref_pos, ref_vel, targ_vel = np.copy(self.get_ref_state(self.phase))
+        ref_pos, ref_vel, targ_vel = np.copy(self.get_ref_state(self.phase-1))
 
         weight = [0.15, 0.15, 0.1, 0.05, 0.05, 0.15, 0.15, 0.1, 0.05, 0.05]
 
@@ -368,10 +378,10 @@ class CassieEnv:
         ### NOT using exp ###
 
         self.reward = 0.4 * (-joint_error) +       \
-                 0.3 * (-com_error) +         \
+                 0.0 * (-com_error) +         \
                  0.3 * (-orientation_error) + \
                  0.1 * (-spring_error) + \
-                 0.5 * (-vel_error) + \
+                 0.0 * (-vel_error) + \
                     10
 
         return self.reward

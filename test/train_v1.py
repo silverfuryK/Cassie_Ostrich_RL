@@ -3,7 +3,8 @@ import time
 import math
 from datetime import datetime
 import numpy as np
-from new_env import CassieEnv
+from new_env_steady import CassieEnv
+#from new_env import CassieEnv
 from ddpg_ac import Agent
 from a_c_test_agent import NewAgent
 from cassiemujoco import *
@@ -69,7 +70,7 @@ for i in range(tot_episodes):
                 #time.sleep(1)
                 #env.render()
                 
-                #print('timestep: ', tp,'sim time: %.2f'% env.time,' reward: ',env.reward)
+                print('timestep: ', tp,'sim time: %.2f'% env.time,' reward: ',env.reward)
                 tp = tp + 1
         agent.learn()
         score_history.append(score)
