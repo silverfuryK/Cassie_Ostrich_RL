@@ -166,9 +166,15 @@ class CassieEnv:
         # Early termination
         #done = not(height > 0.4 and height < 3.0)
 
+        
+
         reward = self.compute_reward()
 
-        self.check_reset()
+        f = self.check_reset()
+
+        if f:
+            reward = reward - 500
+
 
         # TODO: make 0.3 a variable/more transparent
         # if reward < 0.3:
@@ -244,10 +250,13 @@ class CassieEnv:
     def check_reset(self):
         #print(self.sim.xpos('cassie-pelvis')[2])
         if self.sim.xpos('cassie-pelvis')[2] < 0.20:
+            self.reward = self.reward - 500
             self.done = True
             self.reset()
+            return True
         else:
             self.done = False
+            return False
 
     
     def set_joint_pos(self, jpos, fbpos=None, iters=5000):
@@ -307,7 +316,7 @@ class CassieEnv:
 
         target = ref_pos[[0,1,2,3,6,7,8,9,10,13]]
         actual = qpos[self.pos_idx]
-        joint_error = sum(50 * (weight * (target-actual)) ** 2)
+        joint_error = sum(2 * (weight * (target-actual)) ** 2)
         
 
         # center of mass: x, y, z
@@ -360,9 +369,10 @@ class CassieEnv:
 
         self.reward = 0.4 * (-joint_error) +       \
                  0.3 * (-com_error) +         \
-                 0.0 * (-orientation_error) + \
+                 0.3 * (-orientation_error) + \
                  0.1 * (-spring_error) + \
-                 0.5 * (-vel_error)
+                 0.5 * (-vel_error) + \
+                    10
 
         return self.reward
 
