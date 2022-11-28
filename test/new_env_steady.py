@@ -418,7 +418,7 @@ class CassieEnv:
         qpos = np.copy(self.sim.qpos())
         qvel = np.copy(self.sim.qvel()) 
 
-        ref_pos, ref_vel, cmd_vel = self.get_ref_state(self.phase)
+        ref_pos, ref_vel, cmd_vel = self.get_ref_state(self.phase-1)
         #print(ref_pos)
 
 
