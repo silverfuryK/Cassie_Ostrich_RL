@@ -69,7 +69,7 @@ for i in range(tot_episodes):
                 #time.sleep(1)
                 #env.render()
                 
-                print('timestep: ', tp,'sim time: %.2f'% env.time,' reward: ',env.reward)
+                #print('timestep: ', tp,'sim time: %.2f'% env.time,' reward: ',env.reward)
                 tp = tp + 1
         agent.learn()
         score_history.append(score)

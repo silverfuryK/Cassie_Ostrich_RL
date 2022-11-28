@@ -176,7 +176,7 @@ class CassieEnv:
 
         #print(self.get_full_state().shape)
         #print(reward)
-        print(self.phase)
+        #print(self.phase)
 
         return self.get_full_state(), reward, self.done, {}
 
