@@ -307,7 +307,7 @@ class CassieEnv:
 
         target = ref_pos[[0,1,2,3,6,7,8,9,10,13]]
         actual = qpos[self.pos_idx]
-        joint_error = sum(30 * (weight * (target-actual)) ** 2)
+        joint_error = sum(50 * (weight * (target-actual)) ** 2)
         
 
         # center of mass: x, y, z
@@ -320,7 +320,7 @@ class CassieEnv:
 
             # NOTE: in Xie et al y target is 0
 
-            com_error += (target - actual) ** 2
+            com_error += 10 * (target - actual) ** 2
                
         # COM orientation: qx, qy, qz
         #print("orientation error")
@@ -349,11 +349,20 @@ class CassieEnv:
             vel_error += (target - actual) ** 2
         #print("--") 
         
-        self.reward = 0.5 * np.exp(-joint_error) +       \
-                 0.3 * np.exp(-com_error) +         \
-                 0.0 * np.exp(-orientation_error) + \
-                 0.1 * np.exp(-spring_error) + \
-                 0.4 * np.exp(-vel_error)
+        ### using exp ###
+        # self.reward = 0.5 * np.exp(-joint_error) +       \
+        #          0.3 * np.exp(-com_error) +         \
+        #          0.0 * np.exp(-orientation_error) + \
+        #          0.1 * np.exp(-spring_error) + \
+        #          0.4 * np.exp(-vel_error)
+
+        ### NOT using exp ###
+
+        self.reward = 0.4 * (-joint_error) +       \
+                 0.3 * (-com_error) +         \
+                 0.0 * (-orientation_error) + \
+                 0.1 * (-spring_error) + \
+                 0.5 * (-vel_error)
 
         return self.reward
 

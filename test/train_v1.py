@@ -18,7 +18,7 @@ env = CassieEnv(model,traj_path,60)
 
 
 agent = Agent(alpha=0.01, beta=0.0025, input_dims=[56], tau=0.001, env=env,
-              batch_size=128,  layer1_size=128, layer2_size=128, n_actions=14)
+              batch_size=128,  layer1_size=512, layer2_size=512, n_actions=14)
 #agent.load_models()
 #agent.check_actor_params()
 '''
@@ -71,6 +71,7 @@ for i in range(tot_episodes):
                 
                 print('timestep: ', tp,'sim time: %.2f'% env.time,' reward: ',env.reward)
                 tp = tp + 1
+        agent.learn()
         score_history.append(score)
         print('episode: ', i,'score: %.2f' % score,'sim time: %.2f'% env.time,' reward: ',env.reward)
         #print('sim time: %.2f'% env.sim_time,' reward: ',env.reward_t)
