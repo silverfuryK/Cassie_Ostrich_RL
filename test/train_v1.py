@@ -9,17 +9,17 @@ from ddpg_ac import Agent
 from a_c_test_agent import NewAgent
 from cassiemujoco import *
 
-model = '/home/k38/Cassie_Ostrich_RL/test/cassie.xml'
-#model = '/home/fury/OstrichCassie/Cassie_Ostrich_RL/test/cassie.xml'
+#model = '/home/k38/Cassie_Ostrich_RL/test/cassie.xml'
+model = '/home/fury/OstrichCassie/Cassie_Ostrich_RL/test/cassie.xml'
 traj_path = 'ostrichrl/ostrichrl/assets/mocap/cassie/'
 bot = CassieSim(model,terrain = False)
 
-env = CassieEnv(model,traj_path,60)
+env = CassieEnv(model,traj_path,simrate=120)
 
 
 
-agent = Agent(alpha=0.01, beta=0.0025, input_dims=[56], tau=0.001, env=env,
-              batch_size=128,  layer1_size=512, layer2_size=512, n_actions=14)
+agent = Agent(alpha=0.0001, beta=0.0001, input_dims=[56], tau=0.001, env=env,
+              batch_size=128,  layer1_size=512, layer2_size=512, n_actions=10)
 #agent.load_models()
 #agent.check_actor_params()
 '''
@@ -36,10 +36,10 @@ max_tp = 60*60*10*10*2
 tp = 0
 for i in range(tot_episodes):
         obs = env.reset()
-        print(obs.shape)
+        #print(obs.shape)
         done = False
         score = 0
-        print('EPISODE ' + str(i))
+        #print('EPISODE ' + str(i))
         while not done:
                 '''
                 cmd_vel = trajec.get_cmd_vel(sim_time)
@@ -70,14 +70,19 @@ for i in range(tot_episodes):
                 #time.sleep(1)
                 #env.render()
                 
-                print('timestep: ', tp,'sim time: %.2f'% env.time,' reward: ',env.reward)
+                #print('timestep: ', tp,'sim time: %.2f'% env.time,' reward: ',env.reward)
                 tp = tp + 1
         agent.learn()
         score_history.append(score)
-        print('episode: ', i,'score: %.2f' % score,'sim time: %.2f'% env.time,' reward: ',env.reward)
+        print('episode: ', i,'| score: %.2f' % score,' | reward: ',reward)
+
+        if i%5000 == 0:
+                print(agent.actor.checkpoint_file)
+                agent.save_models()
         #print('sim time: %.2f'% env.sim_time,' reward: ',env.reward_t)
         #print(env.obs_t, env.action)
         #print(env.reward_t)
+
 print(agent.actor.checkpoint_file)
 agent.save_models()      
 #plotLearning(score_history, filename = 'plot1.png', window=20)

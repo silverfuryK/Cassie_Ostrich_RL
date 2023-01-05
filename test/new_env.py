@@ -12,7 +12,7 @@ bot = CassieSim(model,terrain = False)
 
 
 class CassieEnv:
-    def __init__(self, model, traj_path, simrate=60, clock_based=False):
+    def __init__(self, model, traj_path, simrate=120, clock_based=False):
         self.sim = CassieSim(model)
         self.vis = CassieVis(self.sim)
         self.traj_path = 'ostrichrl/ostrichrl/assets/mocap/cassie/'
@@ -137,8 +137,8 @@ class CassieEnv:
             self.u.leftLeg.motorPd.dGain[i]  = self.D[i]
             self.u.rightLeg.motorPd.dGain[i] = self.D[i]
 
-            self.u.leftLeg.motorPd.torque[i]  = 10000 # Feedforward torque
-            self.u.rightLeg.motorPd.torque[i] = 10000 
+            self.u.leftLeg.motorPd.torque[i]  = 0 # Feedforward torque
+            self.u.rightLeg.motorPd.torque[i] = 0 
 
             self.u.leftLeg.motorPd.pTarget[i]  = target[i]
             self.u.rightLeg.motorPd.pTarget[i] = target[i + 5]
@@ -164,7 +164,7 @@ class CassieEnv:
             self.counter += 1
 
         # Early termination
-        #done = not(height > 0.4 and height < 3.0)
+        # done = not(height > 0.4 and height < 3.0)
 
         
 
@@ -187,8 +187,9 @@ class CassieEnv:
         return self.get_full_state(), reward, self.done, {}
 
     def reset(self):
-        #self.phase = random.randint(0, self.phaselen)
-        self.phase = 0
+
+        self.phase = random.randint(0, self.phaselen)
+        #self.phase = 0
         self.time = 0
         self.counter = 0
 

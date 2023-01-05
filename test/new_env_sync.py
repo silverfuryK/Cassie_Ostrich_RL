@@ -12,7 +12,7 @@ bot = CassieSim(model,terrain = False)
 
 
 class CassieEnv:
-    def __init__(self, model, traj_path, simrate=240, clock_based=False):
+    def __init__(self, model, traj_path, simrate=2000, sim_ratio = 1000, clock_based=False):
         self.sim = CassieSim(model)
         self.vis = CassieVis(self.sim)
         self.traj_path = 'ostrichrl/ostrichrl/assets/mocap/cassie/'
@@ -52,6 +52,7 @@ class CassieEnv:
 
         self.simrate = simrate # simulate X mujoco steps with same pd target
                                # 60 brings simulation from 2000Hz to roughly 30Hz
+        self.simratio = sim_ratio
 
         self.time    = 0 # number of time steps in current episode
         self.phase   = 0 # portion of the phase the robot is in
@@ -111,21 +112,6 @@ class CassieEnv:
         self.vel_index = np.array([6,7,8,12,13,14,18,19,20,21,25,26,27,31])
 
         self.ref_index = np.array([6,7,8,12,13,14,18,19,20,21,25,26,27,31])
-
-        # // [ 6] Left hip roll         (Motor [0])
-        # // [ 7] Left hip yaw          (Motor [1])
-        # // [ 8] Left hip pitch        (Motor [2])
-        # // [12] Left knee             (Motor [3])
-        # // [13] Left shin                        (Joint [0])
-        # // [14] Left tarsus                      (Joint [1])
-        # // [18] Left foot             (Motor [4], Joint [2])
-        # // [19] Right hip roll        (Motor [5])
-        # // [20] Right hip yaw         (Motor [6])
-        # // [21] Right hip pitch       (Motor [7])
-        # // [25] Right knee            (Motor [8])
-        # // [26] Right shin                       (Joint [3])
-        # // [27] Right tarsus                     (Joint [4])
-        # // [31] Right foot            (Motor [9], Joint [5])
         
         self.get_init_pos()
         self.get_init_vel()
@@ -167,7 +153,7 @@ class CassieEnv:
 
     def step(self, action):
         self.action_t = action
-
+        
         for _ in range(self.simrate):
             self.step_simulation(action)
             
@@ -177,12 +163,9 @@ class CassieEnv:
         self.time  += 1
         self.phase += 1
 
-        #print(self.phase)
-
-        # if self.phase > self.phaselen:
-        #     self.phase = 0
-        #     self.counter += 1
-        self.counter += 1
+        if self.phase > self.phaselen:
+            self.phase = 0
+            self.counter += 1
 
         # Early termination
         #done = not(height > 0.4 and height < 3.0)
@@ -193,8 +176,8 @@ class CassieEnv:
 
         f = self.check_reset()
 
-        #if f:
-        #    reward = reward - 500
+        if f:
+            reward = reward - 500
 
 
         # TODO: make 0.3 a variable/more transparent
@@ -220,20 +203,17 @@ class CassieEnv:
         #print(self.qpos_targ.shape)
         self.qvel_targ = np.load(self.traj_path+"qvel/" + str(self.file_num) + ".npy")
         self.cmd_vel_targ = np.load(self.traj_path+"command_pos_vel/qvel/" + str(self.file_num) + ".npy")
-        #print(self.cmd_vel_targ.shape)
         self.xipos_targ = np.load(self.traj_path+"xipos/" + str(self.file_num) + ".npy")
 
         self.phaselen = math.floor(len(self.qpos_targ)/self.simrate) -1
-        print('PhaseLen = ' + str(self.phaselen),' | traj len = ' + str(len(self.qpos_targ)))
+        #print('PhaseLen = ' + str(self.phaselen),' | traj len = ' + str(len(self.qpos_targ)))
 
-        self.action_t = np.zeros(10)
+        self.action_t = np.zeros(20)
         #self.step(self.action_t)
 
         #qpos, qvel = self.get_ref_state(self.phase)
 
         self.sim.full_reset()
-        
-        
 
         ###### RESET THE POSE TO THE SAME AS THE POSE IN TRAJECTORY ##########
 
@@ -242,18 +222,16 @@ class CassieEnv:
         # self.sim.set_qpos(self.init_pose)
         # self.sim.set_qvel(self.init_vel)
         # self.sim.set_geom_pos(self.init_geom)
-        self.sim.set_geom_pos([0,0,-10],'cassie-pelvis')
-        self.sim.set_body_pos(name='cassie-pelvis', data=[0,0,2])
-        
+        self.sim.set_geom_pos([0,1,-1,-1],'cassie-pelvis')
         
         #self.sim.step_pd(pd_in_t())
         #self.sim.set_geom_pos()
         #self.sim.set_qpos(self.get_init_pos())
         #self.sim.set_qvel(self.get_init_vel())
         #self.sim.set_geom_pos(self.get_init_geom())
-        self.sim.hold()
+        
 
-        time.sleep(0.1)
+        #time.sleep(1)
 
         return self.get_full_state()
 
@@ -275,13 +253,8 @@ class CassieEnv:
     # check reset condition in step'
     def check_reset(self):
         #print(self.sim.xpos('cassie-pelvis')[2])
-        if self.phase == len(self.qpos_targ)-1:
-            self.done = True
-            self.reset()
-            return True
-        
         if self.sim.xpos('cassie-pelvis')[2] < 0.4:
-            #self.reward = self.reward - 500
+            self.reward = self.reward - 500
             self.done = True
             self.reset()
             return True
@@ -327,7 +300,7 @@ class CassieEnv:
         qpos = np.copy(self.sim.qpos())
         qvel = np.copy(self.sim.qvel())
 
-        ref_pos, ref_vel, targ_vel = np.copy(self.get_ref_state(self.phase-1))
+        ref_pos, ref_vel, targ_vel = np.copy(self.get_ref_state(self.phase))
 
         weight = [0.15, 0.15, 0.1, 0.05, 0.05, 0.15, 0.15, 0.1, 0.05, 0.05]
 
@@ -398,12 +371,12 @@ class CassieEnv:
 
         ### NOT using exp ###
 
-        self.reward = 0.8 * np.exp(-joint_error) +       \
-                 0.0 * np.exp(-com_error) +         \
-                 0.0 * np.exp(-orientation_error) + \
-                 0.2 * np.exp(-spring_error) + \
-                 0.0 * np.exp(-vel_error) + \
-                    0
+        self.reward = 0.4 * (-joint_error) +       \
+                 0.3 * (-com_error) +         \
+                 0.3 * (-orientation_error) + \
+                 0.1 * (-spring_error) + \
+                 0.5 * (-vel_error) + \
+                    10
 
         return self.reward
 
@@ -418,7 +391,6 @@ class CassieEnv:
 
         #pos = np.copy(self.trajectory.qpos[phase * self.simrate])
         pos = np.copy(self.qpos_targ[phase,self.ref_index])
-        #print(np.shape(pos))
         targ_vel = np.copy(self.cmd_vel_targ[:,phase])
 
         # this is just setting the x to where it "should" be given the number
@@ -440,7 +412,7 @@ class CassieEnv:
         qpos = np.copy(self.sim.qpos())
         qvel = np.copy(self.sim.qvel()) 
 
-        ref_pos, ref_vel, cmd_vel = self.get_ref_state(self.phase-1)
+        ref_pos, ref_vel, cmd_vel = self.get_ref_state(self.phase)
         #print(ref_pos)
 
 
