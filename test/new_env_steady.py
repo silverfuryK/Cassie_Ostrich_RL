@@ -342,12 +342,14 @@ class CassieEnv:
         #     target = ref_pos[j]
         #     actual = qpos[j]
 
+        joint_scale_weight = [0.8,0.8,0.8,1,1,0.8,0.8,0.8,1,1]
+
 
         #     joint_error += 30 * weight[i] * (target - actual) ** 2
 
         target = ref_pos[[0,1,2,3,6,7,8,9,10,13]]
-        actual = qpos[self.pos_idx]
-        joint_error = sum(2 * (weight * (target-actual)) ** 2)
+        actual = np.array(qpos[self.pos_idx]) * np.array(joint_scale_weight)
+        joint_error = sum(2 * (weight * (target-actual.tolist())) ** 2)
         
 
         # center of mass: x, y, z
@@ -398,7 +400,7 @@ class CassieEnv:
 
         ### NOT using exp ###
 
-        self.reward = 0.8 * np.exp(-joint_error) +       \
+        self.reward = 0.8 * np.exp(- 0.4* joint_error) +       \
                  0.0 * np.exp(-com_error) +         \
                  0.0 * np.exp(-orientation_error) + \
                  0.2 * np.exp(-spring_error) + \

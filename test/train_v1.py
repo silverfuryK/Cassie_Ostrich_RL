@@ -18,8 +18,8 @@ env = CassieEnv(model,traj_path,simrate=120)
 
 
 
-agent = Agent(alpha=0.00001, beta=0.00001, input_dims=[56], tau=0.001, env=env,
-              batch_size=128,  layer1_size=512, layer2_size=512, n_actions=10)
+agent = Agent(alpha=0.00001, beta=0.00001, input_dims=[56], tau=0.01, env=env,
+              batch_size=128,  layer1_size=1024, layer2_size=1024, n_actions=10)
 agent.load_models()
 #agent.check_actor_params()
 '''
