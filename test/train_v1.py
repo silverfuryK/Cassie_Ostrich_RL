@@ -3,7 +3,7 @@ import time
 import math
 from datetime import datetime
 import numpy as np
-from new_env_steady import CassieEnv
+from new_env import CassieEnv
 #from new_env import CassieEnv
 from ddpg_ac import Agent
 from a_c_test_agent import NewAgent

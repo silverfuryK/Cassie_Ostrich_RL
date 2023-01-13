@@ -126,8 +126,10 @@ class CassieEnv:
         
         #ref_pos, ref_vel = self.get_ref_state(self.phase + 1)
 
-        target = action + self.get_pos()
-        target = target[[0,1,2,3,6,7,8,9,10,13]]
+        # target = action + self.get_pos()
+        # target = target[[0,1,2,3,6,7,8,9,10,13]]
+
+        target = action
 
         self.u = pd_in_t()
         for i in range(5):
@@ -188,8 +190,8 @@ class CassieEnv:
 
     def reset(self):
 
-        self.phase = random.randint(0, self.phaselen)
-        #self.phase = 0
+        #self.phase = random.randint(0, self.phaselen)
+        self.phase = 0
         self.time = 0
         self.counter = 0
 
@@ -368,12 +370,12 @@ class CassieEnv:
 
         ### NOT using exp ###
 
-        self.reward = 0.4 * (-joint_error) +       \
-                 0.3 * (-com_error) +         \
-                 0.3 * (-orientation_error) + \
-                 0.1 * (-spring_error) + \
-                 0.5 * (-vel_error) + \
-                    10
+        self.reward = 0.4 * np.exp(-joint_error) +       \
+                 1 * np.exp(-com_error) +         \
+                 1 * np.exp(-orientation_error) + \
+                 0.1 * np.exp(-spring_error) + \
+                 0.5 * np.exp(-vel_error) + \
+                    2
 
         return self.reward
 
