@@ -215,6 +215,8 @@ class CassieEnv:
         self.counter = 0
 
         self.file_num = random.randint(1, 35)
+        self.file_num = 11
+        print("traj number: "+ str(self.file_num))
         self.reward = 0
 
         self.qpos_targ = np.load(self.traj_path+"qpos/" + str(self.file_num) + ".npy")
@@ -254,7 +256,7 @@ class CassieEnv:
         #self.sim.set_geom_pos(self.get_init_geom())
         self.sim.hold()
 
-        time.sleep(0.1)
+        time.sleep(1)
 
         return self.get_full_state()
 
@@ -328,7 +330,7 @@ class CassieEnv:
         qpos = np.copy(self.sim.qpos())
         qvel = np.copy(self.sim.qvel())
 
-        ref_pos, ref_vel, targ_vel = np.copy(self.get_ref_state(self.phase-1))
+        ref_pos, ref_vel, targ_vel = self.get_ref_state(self.phase-1)
 
         weight = [0.15, 0.15, 0.1, 0.05, 0.05, 0.15, 0.15, 0.1, 0.05, 0.05]
 

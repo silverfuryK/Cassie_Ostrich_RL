@@ -3,6 +3,8 @@ import time
 import numpy as np
 import math
 import random
+from numpy import dtype
+from gym import spaces
 
 model = 'cassie.xml'
 traj_path = 'ostrichrl/ostrichrl/assets/mocap/cassie/'
@@ -12,9 +14,13 @@ bot = CassieSim(model,terrain = False)
 
 
 class CassieEnv:
-    def __init__(self, model, traj_path, simrate=120, clock_based=False):
+    def __init__(self, model, traj_path, simrate=120, clock_based=False, render = False):
+        self.metadata = {'model': ['cassie']}
         self.sim = CassieSim(model)
-        self.vis = CassieVis(self.sim)
+        
+        if render == True:
+            self.vis = CassieVis(self.sim)
+
         self.traj_path = 'ostrichrl/ostrichrl/assets/mocap/cassie/'
         self.file_num = random.randint(1, 35)
 
@@ -26,8 +32,8 @@ class CassieEnv:
             self.observation_space = np.zeros(42)
             self.action_space      = np.zeros(10)
         else:
-            self.observation_space = np.zeros(80)
-            self.action_space      = np.zeros(10)
+            self.observation_space = spaces.Box(low=-np.inf,high=np.inf,shape=(56,))
+            self.action_space      = spaces.Box(low=np.float32(np.array([-3.14/3]*10)), high=np.float32(np.array([3.14/3]*10)))
             
         self.qpos_targ = np.load(self.traj_path+"qpos/" + str(self.file_num) + ".npy")
         self.qvel_targ = np.load(self.traj_path+"qvel/" + str(self.file_num) + ".npy")
@@ -119,6 +125,13 @@ class CassieEnv:
         #init states to be impleented with the checkreset and reset function
         #self.init_qpos = 
         
+    def unwrapped(self):
+        """Returns the base non-wrapped environment.
+        Returns:
+            Env: The base non-wrapped gym.Env instance
+        """
+        return self
+
     
     def step_simulation(self, action):
         
@@ -195,7 +208,8 @@ class CassieEnv:
         self.time = 0
         self.counter = 0
 
-        self.file_num = random.randint(1, 35)
+        #self.file_num = random.randint(1, 35)
+        self.file_num = 11
         self.reward = 0
 
         self.qpos_targ = np.load(self.traj_path+"qpos/" + str(self.file_num) + ".npy")
@@ -299,7 +313,7 @@ class CassieEnv:
         qpos = np.copy(self.sim.qpos())
         qvel = np.copy(self.sim.qvel())
 
-        ref_pos, ref_vel, targ_vel = np.copy(self.get_ref_state(self.phase))
+        ref_pos, ref_vel, targ_vel = self.get_ref_state(self.phase)
 
         weight = [0.15, 0.15, 0.1, 0.05, 0.05, 0.15, 0.15, 0.1, 0.05, 0.05]
 
@@ -691,6 +705,6 @@ class CassieEnv:
 
     def render(self):
         if self.vis is None:
-            self.vis = CassieVis()
+            self.vis = CassieVis(self.sim)
 
         self.vis.draw(self.sim)

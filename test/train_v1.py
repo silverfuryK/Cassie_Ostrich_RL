@@ -10,7 +10,7 @@ from a_c_test_agent import NewAgent
 from cassiemujoco import *
 
 #model = '/home/k38/Cassie_Ostrich_RL/test/cassie.xml'
-model = '/home/fury/OstrichCassie/Cassie_Ostrich_RL/test/cassie.xml'
+model = '/home/fury/LIDAR/Cassie_Ostrich_RL/test/cassie.xml'
 traj_path = 'ostrichrl/ostrichrl/assets/mocap/cassie/'
 bot = CassieSim(model,terrain = False)
 
@@ -62,7 +62,7 @@ for i in range(tot_episodes):
                 #print(new_state[0:3])
                 #print(env.sim.xpos('cassie-pelvis'))
                 env.render()
-                #print(act.shape)
+                print(new_state.shape)
                 agent.remember(obs, act, reward, new_state, int(done))
                 agent.learn()
                 score += reward
