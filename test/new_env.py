@@ -17,7 +17,7 @@ class CassieEnv:
     def __init__(self, model, traj_path, simrate=120, clock_based=False, render = False):
         self.metadata = {'model': ['cassie']}
         self.sim = CassieSim(model)
-        
+
         if render == True:
             self.vis = CassieVis(self.sim)
 
@@ -350,7 +350,7 @@ class CassieEnv:
                
         # COM orientation: qx, qy, qz
         #print("orientation error")
-        for j in [4, 5, 6]:
+        for j in [3, 4, 5, 6]:
             target = ref_pos[j] # NOTE: in Xie et al orientation target is 0
             actual = qpos[j]
             #print('targ = '+str(target)+'actual = '+str(actual))
@@ -359,7 +359,7 @@ class CassieEnv:
         #print("--") 
         
         # left and right shin springs
-        #for i in [15, 29]:
+        # for i in [15, 29]:
         #    target = ref_pos[i] # NOTE: in Xie et al spring target is 0
         #    actual = qpos[i]
 
@@ -367,7 +367,7 @@ class CassieEnv:
 
         # target vel error
 
-        for j in [0, 1 ,2]:
+        for j in [0, 1 ,2 ,3 ,4 ,5 ,6]:
             target = targ_vel[j] # NOTE: in Xie et al orientation target is 0
             actual = qvel[j]
             #print('targ = '+str(target)+'actual = '+str(actual))
@@ -387,9 +387,8 @@ class CassieEnv:
         self.reward = 0.4 * np.exp(-joint_error) +       \
                  1 * np.exp(-com_error) +         \
                  1 * np.exp(-orientation_error) + \
-                 0.1 * np.exp(-spring_error) + \
-                 0.5 * np.exp(-vel_error) + \
-                    2
+                 0.05 * np.exp(-spring_error) + \
+                 0.3 * np.exp(-vel_error)
 
         return self.reward
 
